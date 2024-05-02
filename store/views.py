@@ -24,4 +24,12 @@ def store(request,category_slug=None):
 
 
 def product_detail(request,category_slug,product_slug):
-    return render(request,'store/product_detail.html')
+    try:
+        single_product = Product.objects.get(category__slug=category_slug,slug=product_slug)
+    except Exception as e:
+        raise e
+    contex = {
+        'single_product':single_product,
+        'is_out_of_stock': single_product.stock <= 0,
+    }
+    return render(request,'store/product_detail.html',contex)
