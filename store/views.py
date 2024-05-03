@@ -1,4 +1,7 @@
 from django.shortcuts import render,get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
+from cart.models import CartItem
+from cart.views import _cart_id
 from category.models import Category
 from .models import Product
 
@@ -23,13 +26,18 @@ def store(request,category_slug=None):
 
 
 
-def product_detail(request,category_slug,product_slug):
+def product_detail(request, category_slug, product_slug):
     try:
-        single_product = Product.objects.get(category__slug=category_slug,slug=product_slug)
+        single_product = Product.objects.get(category__slug=category_slug, slug=product_slug)
+        try:
+            in_cart = CartItem.objects.get(cart__cart_id=_cart_id(request), product=single_product)
+        except ObjectDoesNotExist:
+            in_cart = False
     except Exception as e:
         raise e
-    contex = {
-        'single_product':single_product,
+    context = {
+        'single_product': single_product,
         'is_out_of_stock': single_product.stock <= 0,
+        'in_cart': in_cart,
     }
-    return render(request,'store/product_detail.html',contex)
+    return render(request, 'store/product_detail.html', context)
